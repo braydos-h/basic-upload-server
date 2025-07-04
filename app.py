@@ -1,12 +1,16 @@
 # app.py
-import os, uuid, time, asyncio, shutil
+import uuid
+import time
+import asyncio
 from pathlib import Path
-from datetime import datetime, timedelta
+import logging
 
 from fastapi import FastAPI, UploadFile, File, HTTPException
-from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 import aiofiles
+
+logger = logging.getLogger(__name__)
 
 UPLOAD_DIR = Path(__file__).parent / "uploads"
 UPLOAD_DIR.mkdir(exist_ok=True)
@@ -15,9 +19,13 @@ TTL_HOURS = 24
 
 app = FastAPI(title="500 MB uploader")
 
+
 # ----- Utility -------------------------------------------------------------
+
+
 def _file_path(token: str) -> Path:
     return UPLOAD_DIR / token
+
 
 async def _purge_old_files():
     """Delete everything older than TTL_HOURS."""
@@ -26,10 +34,12 @@ async def _purge_old_files():
         if f.is_file() and f.stat().st_mtime < cutoff:
             try:
                 f.unlink()
-            except Exception:
-                pass
+            except OSError as exc:
+                logger.warning("Failed to delete %s: %s", f, exc)
 
 # run cleanup in the background every hour
+
+
 @app.on_event("startup")
 async def schedule_cleanup():
     async def _loop():
@@ -38,7 +48,10 @@ async def schedule_cleanup():
             await asyncio.sleep(3600)   # 1 h
     asyncio.create_task(_loop())
 
+
 # ----- Routes --------------------------------------------------------------
+
+
 @app.post("/upload")
 async def upload(file: UploadFile = File(...)):
     if file.content_type is None:
@@ -59,6 +72,7 @@ async def upload(file: UploadFile = File(...)):
             await out.write(chunk)
 
     return {"url": f"/file/{token}", "expires": TTL_HOURS}
+
 
 @app.get("/file/{token}")
 async def serve_file(token: str):
