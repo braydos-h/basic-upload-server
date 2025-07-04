@@ -10,8 +10,12 @@ import aiofiles
 
 UPLOAD_DIR = Path(__file__).parent / "uploads"
 UPLOAD_DIR.mkdir(exist_ok=True)
-MAX_SIZE = 500 * 1024 * 1024          # 500 MB
-TTL_HOURS = 24
+
+# Allow configuration via environment variables
+# MAX_SIZE is specified in bytes and defaults to 500 MB
+MAX_SIZE = int(os.getenv("MAX_SIZE", 500 * 1024 * 1024))
+# TTL_HOURS is the number of hours before a file expires
+TTL_HOURS = int(os.getenv("TTL_HOURS", 24))
 
 app = FastAPI(title="500 MB uploader")
 
@@ -55,7 +59,8 @@ async def upload(file: UploadFile = File(...)):
             if size > MAX_SIZE:
                 await out.close()
                 dest.unlink(missing_ok=True)
-                raise HTTPException(413, "File too bloody big (limit 500 MB)")
+                limit_mb = MAX_SIZE // (1024 * 1024)
+                raise HTTPException(413, f"File too bloody big (limit {limit_mb} MB)")
             await out.write(chunk)
 
     return {"url": f"/file/{token}", "expires": TTL_HOURS}
