@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Drop your shit here</title>
+<style>
+  body{font-family:sans-serif;display:flex;justify-content:center;align-items:center;
+       height:100vh;margin:0;background:#18181b;color:#fafafa}
+  #drop{border:3px dashed #888;border-radius:1rem;padding:4rem;text-align:center;
+        max-width:480px}
+  .link{margin-top:1rem;word-break:break-all}
+  progress{width:100%;height:1rem;margin-top:1rem}
+</style>
+</head>
+<body>
+<div id="drop">
+  <h1>Upload ≤ 500 MB</h1>
+  <p>Drag & drop or click to choose a file.</p>
+  <input id="file" type="file" hidden />
+  <progress id="bar" value="0" max="100" hidden></progress>
+  <div id="msg" class="link"></div>
+</div>
+
+<script>
+const drop = document.getElementById('drop');
+const input = document.getElementById('file');
+const bar   = document.getElementById('bar');
+const msg   = document.getElementById('msg');
+
+['dragenter','dragover'].forEach(e => drop.addEventListener(e, ev => {
+  ev.preventDefault(); drop.style.borderColor='#4ade80';
+}));
+['dragleave','drop'].forEach(e => drop.addEventListener(e, ev => {
+  ev.preventDefault(); drop.style.borderColor='#888';
+}));
+drop.addEventListener('click', () => input.click());
+drop.addEventListener('drop', ev => handleFile(ev.dataTransfer.files[0]));
+input.addEventListener('change', ev => handleFile(ev.target.files[0]));
+
+function handleFile(file){
+  if(!file) return;
+  if(file.size > 500*1024*1024){
+    alert("Too big, fucker (max 500 MB)."); return;
+  }
+  const xhr = new XMLHttpRequest();
+  xhr.open('POST', '/upload');
+  xhr.upload.onprogress = e => {
+    bar.hidden=false;
+    bar.value = 100 * e.loaded / e.total;
+  };
+  xhr.onload = () => {
+    if (xhr.status === 200){
+      const {url, expires} = JSON.parse(xhr.responseText);
+      msg.innerHTML = `<a href="${url}" target="_blank">${location.origin}${url}</a><br>(gone in ${expires} h)`;
+    } else {
+      alert('Upload failed: ' + xhr.responseText);
+    }
+    bar.hidden=true; bar.value=0;
+  };
+  const form = new FormData();
+  form.append('file', file);
+  xhr.send(form);
+}
+</script>
+</body>
+</html>
