@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<title>Drop your shit here</title>
+<title>Simple File Uploader</title>
 <style>
   body{font-family:sans-serif;display:flex;justify-content:center;align-items:center;
        height:100vh;margin:0;background:#18181b;color:#fafafa}
@@ -40,7 +40,7 @@ input.addEventListener('change', ev => handleFile(ev.target.files[0]));
 function handleFile(file){
   if(!file) return;
   if(file.size > 500*1024*1024){
-    alert("Too big, fucker (max 500 MB)."); return;
+    alert("File exceeds the 500 MB limit."); return;
   }
   const xhr = new XMLHttpRequest();
   xhr.open('POST', '/upload');

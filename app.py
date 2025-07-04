@@ -55,7 +55,7 @@ async def upload(file: UploadFile = File(...)):
             if size > MAX_SIZE:
                 await out.close()
                 dest.unlink(missing_ok=True)
-                raise HTTPException(413, "File too bloody big (limit 500 MB)")
+                raise HTTPException(413, "File exceeds size limit (max 500 MB)")
             await out.write(chunk)
 
     return {"url": f"/file/{token}", "expires": TTL_HOURS}

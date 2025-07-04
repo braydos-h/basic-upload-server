@@ -20,7 +20,7 @@ rem ---- Touch files ----
 rem ---- Drop a one-liner into index.html so you know it worked ----
 (
     echo ^<!DOCTYPE html^>
-    echo ^<html^>^<head^>^<title^>fuckass uploader^</title^>^</head^>
+    echo ^<html^>^<head^>^<title^>File Uploader^</title^>^</head^>
     echo ^<body^>^<h1^>It works &#x1F389;^</h1^>^</body^>
     echo ^</html^>
 ) > "%ROOT%\static\index.html"
