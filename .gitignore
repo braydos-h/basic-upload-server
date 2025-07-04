@@ -1,1 +1,3 @@
-uploader/uploads/
+uploads/
+__pycache__/
+*.pyc
